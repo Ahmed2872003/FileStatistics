@@ -36,3 +36,4 @@ target/
 
 # Java crash logs
 hs_err_pid*.log
+/dist/

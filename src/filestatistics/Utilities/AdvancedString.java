@@ -52,9 +52,10 @@ public class AdvancedString {
     }
     
     public String shortestWord() {
-        String[] splittedString = str.split(" ");
+        String[] splittedString = str.trim().split("\\s+");
         
-        String sw = splittedString[0];
+        
+        String sw = splittedString.length > 0? splittedString[0] : "";
 
         for (String word : splittedString) {
             if (sw.length() > word.length()) {

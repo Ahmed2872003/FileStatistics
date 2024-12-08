@@ -18,14 +18,19 @@ import java.util.logging.Logger;
 
 public class FileManager {
 
-    private ArrayList<File> matchedFiles = new ArrayList();
+    final private int MAX_BUFFER = 20;
 
+    private File[] filesBuffer = new File[MAX_BUFFER];
+
+    private int currFileIndex = -1;
+    
     private File directory = null;
 
-    private int nextFile = 0;
-
     private ReentrantLock mutex = new ReentrantLock();
-    private Condition reader = mutex.newCondition();
+
+    private Condition readerCondition = mutex.newCondition();
+
+    private Condition writerCondition = mutex.newCondition();
 
     public FileManager(File dir) throws FileNotFoundException, NotDirectoryException {
         if (dir.isFile()) {
@@ -57,9 +62,22 @@ public class FileManager {
                         if (file.getName().endsWith(type)) {
                             mutex.lock();
 
-                            matchedFiles.add(new File(file.getAbsolutePath()));
+                            while (currFileIndex == MAX_BUFFER - 1) {
+                                try {
+//                                    System.out.println(Thread.currentThread().getName() + " waiting to add file...");
 
-                            reader.signal();
+                                    writerCondition.await();
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(FileManager.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+
+                            currFileIndex+=1;
+                            
+                            filesBuffer[currFileIndex] = new File(file.getAbsolutePath());
+//                            System.out.println(Thread.currentThread().getName() + " added file, currFileIndex = " + currFileIndex);
+
+                            readerCondition.signal();
 
                             mutex.unlock();
 
@@ -73,16 +91,24 @@ public class FileManager {
     public File getNextFile() {
         mutex.lock();
 
-        try {
-            while (matchedFiles.isEmpty() || nextFile >= matchedFiles.size()) {
-                reader.await();
-            }
+        while (currFileIndex == -1) { // All the files are processed or there is no files in the buffer
+            try {
+//                System.out.println(Thread.currentThread().getName() + " waiting for files...");
 
-        } catch (InterruptedException ex) {
-            Logger.getLogger(FileManager.class.getName()).log(Level.SEVERE, null, ex);
+                readerCondition.await();
+
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
         }
 
-        File requiredFile = matchedFiles.get(nextFile++);
+//        System.out.println(filesBuffer[currFileIndex] + " With index: " + currFileIndex + " is being processed");
+
+        File requiredFile = filesBuffer[currFileIndex];
+        
+        currFileIndex-=1;
+
+        writerCondition.signal(); // informing the writer that there is an empty buffer to write in
 
         mutex.unlock();
 

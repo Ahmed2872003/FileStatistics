@@ -42,7 +42,7 @@ public class AdvancedString {
     public String longestWord() {
         String lw = "";
 
-        for (String word : str.split(" ")) {
+        for (String word : str.trim().split("\\s+")) {
             if (lw.length() < word.length()) {
                 lw = word;
             }

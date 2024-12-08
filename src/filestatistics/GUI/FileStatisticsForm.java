@@ -1,5 +1,6 @@
 package filestatistics.GUI;
 
+import filestatistics.FileManager;
 import filestatistics.FileStatistics;
 import filestatistics.GUI.interfaces.IUpdateGUI;
 import filestatistics.ThreadFilesAssigner;
@@ -13,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 public class FileStatisticsForm extends javax.swing.JFrame implements IUpdateGUI {
@@ -246,8 +248,7 @@ public class FileStatisticsForm extends javax.swing.JFrame implements IUpdateGUI
     private void startProcessingActionPerfomred(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startProcessingActionPerfomred
 
         resetGUI();
-        
-        
+
         if (choosenFile == null) {
             JOptionPane.showMessageDialog(this, "Choose a directory", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -256,11 +257,18 @@ public class FileStatisticsForm extends javax.swing.JFrame implements IUpdateGUI
         int nOfCores = Runtime.getRuntime().availableProcessors();
 
         try {
-            ThreadFilesAssigner tfa = new ThreadFilesAssigner(choosenFile, "txt", enableSubDir.isSelected(), this);
+
+            FileManager fm = new FileManager(choosenFile);
+
+            ThreadFilesAssigner tfa = new ThreadFilesAssigner(fm, this);
 
             ThreadManager tm = new ThreadManager(nOfCores, tfa);
 
             tm.startThreads();
+            
+            new Thread(() -> {
+                fm.listFiles("txt", enableSubDir.isSelected());
+            }).start();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -301,10 +309,10 @@ public class FileStatisticsForm extends javax.swing.JFrame implements IUpdateGUI
 
     private void resetGUI() {
         ((DefaultTableModel) jTable1.getModel()).setRowCount(0);
-        
+
         shortestWord = null;
         shortestWordLabel.setText("");
-                
+
         longestWord = null;
         longestWordLabel.setText("");
     }

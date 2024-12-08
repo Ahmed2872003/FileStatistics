@@ -20,9 +20,9 @@ public class ThreadManager {
         }
 
         for (Thread t : threads) {
-            if (!t.isAlive()) {
+//            if (!t.isAlive()) {
                 t.start();
-            }
+//            }
         }
     }
 }

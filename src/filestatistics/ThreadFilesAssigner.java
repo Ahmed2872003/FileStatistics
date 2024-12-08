@@ -20,12 +20,10 @@ public class ThreadFilesAssigner implements Runnable {
     
     private IUpdateGUI GUIUpdater = null;
 
-    public ThreadFilesAssigner(File dir, String type, boolean deepSearch, IUpdateGUI updateGUI) throws FileNotFoundException, NotDirectoryException {
-        fm = new FileManager(dir);
+    public ThreadFilesAssigner(FileManager fm, IUpdateGUI updateGUI) throws FileNotFoundException, NotDirectoryException {
+        this.fm = fm;
         
         GUIUpdater = updateGUI;
-
-        fm.listFiles(dir, type, deepSearch);
     }
 
     @Override
@@ -64,8 +62,8 @@ public class ThreadFilesAssigner implements Runnable {
 
                 String currShortestWord = aString.shortestWord();
                 String currLongestWord = aString.longestWord();
-
-                res.nOfWords += aString.count(".", false);
+                
+                res.nOfWords += aString.get().length();
                 res.nOfIs += aString.count("\\bis\\b", false);
                 res.nOfAre += aString.count("\\bare\\b", false);
                 res.nOfYou += aString.count("\\byou\\b", false);

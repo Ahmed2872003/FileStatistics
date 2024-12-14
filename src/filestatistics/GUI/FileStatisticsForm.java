@@ -269,6 +269,7 @@ public class FileStatisticsForm extends javax.swing.JFrame implements IUpdateGUI
             new Thread(() -> {
                 fm.listFiles("txt", enableSubDir.isSelected());
             }).start();
+            
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }

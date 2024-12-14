@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Other/File.java to edit this template
- */
 package filestatistics;
 
 import java.io.File;
@@ -20,10 +16,10 @@ public class FileManager {
 
     final private int MAX_BUFFER = 20;
 
-    private File[] filesBuffer = new File[MAX_BUFFER];
+    private String[] filesPathsBuffer = new String[MAX_BUFFER];
 
     private int currFileIndex = -1;
-    
+
     private File directory = null;
 
     private ReentrantLock mutex = new ReentrantLock();
@@ -64,7 +60,6 @@ public class FileManager {
 
                             while (currFileIndex == MAX_BUFFER - 1) {
                                 try {
-//                                    System.out.println(Thread.currentThread().getName() + " waiting to add file...");
 
                                     writerCondition.await();
                                 } catch (InterruptedException ex) {
@@ -72,10 +67,9 @@ public class FileManager {
                                 }
                             }
 
-                            currFileIndex+=1;
-                            
-                            filesBuffer[currFileIndex] = new File(file.getAbsolutePath());
-//                            System.out.println(Thread.currentThread().getName() + " added file, currFileIndex = " + currFileIndex);
+                            currFileIndex += 1;
+
+                            filesPathsBuffer[currFileIndex] = file.getAbsolutePath();
 
                             readerCondition.signal();
 
@@ -93,8 +87,6 @@ public class FileManager {
 
         while (currFileIndex == -1) { // All the files are processed or there is no files in the buffer
             try {
-//                System.out.println(Thread.currentThread().getName() + " waiting for files...");
-
                 readerCondition.await();
 
             } catch (InterruptedException ex) {
@@ -102,11 +94,9 @@ public class FileManager {
             }
         }
 
-//        System.out.println(filesBuffer[currFileIndex] + " With index: " + currFileIndex + " is being processed");
+        File requiredFile = new File(filesPathsBuffer[currFileIndex]);
 
-        File requiredFile = filesBuffer[currFileIndex];
-        
-        currFileIndex-=1;
+        currFileIndex -= 1;
 
         writerCondition.signal(); // informing the writer that there is an empty buffer to write in
 
